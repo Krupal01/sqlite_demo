@@ -72,7 +72,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(8.0),
                     title: Text(snapshot.data![index].userName),
-                    subtitle: Text(snapshot.data![index].mobileNumber),
+                    subtitle: Column(
+                      children: [
+                        Text(snapshot.data![index].mobileNumber),
+                        ElevatedButton(
+                            onPressed: () async {
+                              await dbManager
+                                  .deleteUsers(snapshot.data![index]);
+                              setState(() {});
+                            },
+                            child: const Text("delete")),
+                        ElevatedButton(
+                            onPressed: () async {
+                              Users users = snapshot.data![index];
+                              users.userName = "username2";
+                              users.mobileNumber = "sadfadf";
+                              await dbManager.updateUsers(users);
+                              setState(() {});
+                            },
+                            child: const Text("update")),
+                      ],
+                    ),
                   ),
                 );
               },
