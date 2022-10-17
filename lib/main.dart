@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sqlite_demo/DB/db_manager.dart';
+import 'package:sqlite_demo/model/users.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,54 +16,77 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({
+    super.key,
+  });
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  late DbManager dbManager;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  Future<int> addData() async {
+    Users users =
+        Users(id: 0, userName: "userName", mobileNumber: "mobileNumber");
+    return await dbManager.insertUser(users);
+  }
+
+  @override
+  void initState() {
+    dbManager = DbManager();
+
+    dbManager.initDB().whenComplete(
+      () async {
+        await addData();
+        await addData();
+        await addData();
+        setState(() {});
+      },
+    );
+
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text("Sqlite Demo"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+      body: FutureBuilder(
+        future: dbManager.getUsers(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data?.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(8.0),
+                    title: Text(snapshot.data![index].userName),
+                    subtitle: Text(snapshot.data![index].mobileNumber),
+                  ),
+                );
+              },
+            );
+          } else {
+            return Container(
+              height: double.infinity,
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: const Text("Data not found"),
+            );
+          }
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), 
     );
   }
 }
